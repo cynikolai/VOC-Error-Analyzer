@@ -1,7 +1,6 @@
 import xml.etree.ElementTree as etree
 from sklearn.metrics import average_precision_score
 import os
-import math
 
 person_classes = ['person']
 animal_classes = ['bird', 'cat', 'cow', 'dog', 'horse', 'sheep']
@@ -94,7 +93,8 @@ def populate_prediction_detection_dict():
             image_num = int(line_data[0])
             certainty = float(line_data[1])
             xmin, ymin, xmax, ymax = tuple(line_data[2:6])
-            xmin, ymin, xmax, ymax = float(xmin), float(ymin), float(xmax), float(ymax)
+            xmin, ymin = float(xmin), float(ymin)
+            xmax, ymax = float(xmax), float(ymax)
             new_object_detection = ObjectDetection()
             new_object_detection.set_position(xmin, ymin, xmax, ymax)
             new_object_detection.set_class(i)
@@ -112,7 +112,6 @@ def populate_ground_truth_detection_dict():
     path = "results/officialAnnotations"
     for filename in os.listdir(path):
         image_num = int(filename.split(".")[0])
-        print image_num
         ground_truth_detection_dict[image_num] = []
         if image_num not in prediction_detection_dict:
             prediction_detection_dict[image_num] = []
@@ -204,7 +203,6 @@ def average_precision(ground_detections, predicted_detections):
     for remaining_detection in remaining_detections:
         ground_truth_arr.append(1.0)
         predicted_arr.append(0.0)
-    print len(remaining_detections)
 
 
 def is_small_image(detection):
@@ -238,8 +236,8 @@ for image_num in ground_truth_detection_dict:
     ground_detections = ground_truth_detection_dict[image_num]
     predicted_detections = prediction_detection_dict[image_num]
 
-    #if(in_subset(ground_detections)):
-    average_precision(ground_detections, predicted_detections)
-# predicted_arr = [x for _, x in sorted(zip(ground_truth_arr, predicted_arr))]
-# ground_truth_arr = [x for x, _ in sorted(zip(ground_truth_arr, predicted_arr))]
-print average_precision_score(ground_truth_arr, predicted_arr)
+    if(in_subset(ground_detections)):
+        average_precision(ground_detections, predicted_detections)
+
+precision_score = average_precision_score(ground_truth_arr, predicted_arr)
+print "Average Precision: " + str(precision_score)
