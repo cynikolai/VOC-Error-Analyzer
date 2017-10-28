@@ -79,6 +79,8 @@ def iou(detection_1, detection_2):
 
 prediction_detection_dict = {}
 ground_truth_detection_dict = {}
+difficulty_dict = {}
+truncated_dict = {}
 
 
 def populate_prediction_detection_dict():
@@ -120,6 +122,10 @@ def populate_ground_truth_detection_dict():
         for child in root:
             if(child.tag != "object"):
                 continue
+            difficulty = int(child.find('difficult').text)
+            truncated = int(child.find('truncated').text)
+            difficulty_dict[image_num] = difficulty
+            truncated_dict[image_num] = truncated
             i = object_classes.index(child.find('name').text)
             xmin, ymin, xmax, ymax = None, None, None, None
             for box in child:
@@ -233,6 +239,8 @@ def in_subset(ground_detections):
 precisions = []
 
 for image_num in ground_truth_detection_dict:
+    if(difficulty_dict[image_num]):
+        continue
     ground_detections = ground_truth_detection_dict[image_num]
     predicted_detections = prediction_detection_dict[image_num]
 
