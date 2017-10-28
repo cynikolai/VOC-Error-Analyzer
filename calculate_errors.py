@@ -93,8 +93,6 @@ def populate_prediction_detection_dict():
             line_data = line[:-1].split(" ")
             image_num = int(line_data[0])
             certainty = float(line_data[1])
-            if(certainty < .25):
-                continue
             xmin, ymin, xmax, ymax = tuple(line_data[2:6])
             xmin, ymin, xmax, ymax = float(xmin), float(ymin), float(xmax), float(ymax)
             new_object_detection = ObjectDetection()
@@ -189,12 +187,16 @@ def is_correct(remaining_detections, predicted_detection):
     return is_correct
 
 
+ground_truth_arr = []
+predicted_arr = []
+
+
 def average_precision(ground_detections, predicted_detections):
-    if(not len(predicted_detections)):
-        return 0.0
     remaining_detections = ground_detections[:]
     for predicted_detection in predicted_detections:
-        if(is_correct(remaining_detections, predicted_detection)):
+        correct_detection = is_correct(remaining_detections,
+                                       predicted_detection)
+        if(correct_detection):
             ground_truth_arr.append(1.0)
         else:
             ground_truth_arr.append(0.0)
@@ -202,6 +204,7 @@ def average_precision(ground_detections, predicted_detections):
     for remaining_detection in remaining_detections:
         ground_truth_arr.append(1.0)
         predicted_arr.append(0.0)
+    print len(remaining_detections)
 
 
 def is_small_image(detection):
@@ -230,13 +233,13 @@ def in_subset(ground_detections):
     return all_in_subset
 
 precisions = []
-ground_truth_arr = []
-predicted_arr = []
+
 for image_num in ground_truth_detection_dict:
     ground_detections = ground_truth_detection_dict[image_num]
     predicted_detections = prediction_detection_dict[image_num]
 
-    if(in_subset(ground_detections)):
-        average_precision(ground_detections, predicted_detections)
-predicted_arr = [x for _, x in sorted(zip(ground_truth_arr, predicted_arr))]
+    #if(in_subset(ground_detections)):
+    average_precision(ground_detections, predicted_detections)
+# predicted_arr = [x for _, x in sorted(zip(ground_truth_arr, predicted_arr))]
+# ground_truth_arr = [x for x, _ in sorted(zip(ground_truth_arr, predicted_arr))]
 print average_precision_score(ground_truth_arr, predicted_arr)
